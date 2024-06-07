@@ -1,0 +1,285 @@
+*&---------------------------------------------------------------------*
+*& Report ZQM_R_MASTERDOC_SHOW
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT ZQM_R_MASTERDOC_SHOW.
+TABLES sscrfields.
+TYPES: BEGIN OF ty_dept,
+         dept TYPE char30,
+       END OF ty_dept.
+DATA: it_dept        TYPE TABLE OF ty_dept,
+      wa_dept        TYPE ty_dept,
+      it_return      TYPE TABLE OF ddshretval,
+      wa_return      TYPE          ddshretval,
+      it_header      TYPE TABLE OF zqm_r_ma_d_list,
+      wa_header      TYPE zqm_r_ma_d_list,
+      wa_header2     TYPE zqm_r_ma_d_names,
+      cust_container TYPE REF TO cl_gui_custom_container,
+      lv_grid        TYPE REF TO cl_gui_alv_grid,
+      lt_row         TYPE lvc_t_roid,
+      ls_row         TYPE lvc_s_roid,
+      l_lines        TYPE i,
+      io_date        TYPE workflds-gkday,
+      msg(50).
+SELECTION-SCREEN BEGIN OF BLOCK b1 WITH FRAME TITLE TEXT-001.
+  PARAMETERS p_dept TYPE char30 OBLIGATORY.
+SELECTION-SCREEN END OF BLOCK b1.
+
+AT SELECTION-SCREEN ON VALUE-REQUEST FOR p_dept.
+  CLEAR:it_dept[].
+  wa_dept-dept = 'Management (MD section)'.
+  APPEND wa_dept TO it_dept.
+
+  wa_dept-dept = 'Accounts & Finance'.
+  APPEND wa_dept TO it_dept.
+
+  wa_dept-dept = 'Vat section'.
+  APPEND wa_dept TO it_dept.
+
+  wa_dept-dept = 'Marketing (Ctg)'.
+  APPEND wa_dept TO it_dept.
+
+  wa_dept-dept = 'Industrial Sales (Dhk)'.
+  APPEND wa_dept TO it_dept.
+
+  wa_dept-dept = 'Business Development (Dhk)'.
+  APPEND wa_dept TO it_dept.
+
+  wa_dept-dept = 'Marketing-Automotive (Dhk)'.
+  APPEND wa_dept TO it_dept.
+
+  wa_dept-dept = 'Laboratory and R & D'.
+  APPEND wa_dept TO it_dept.
+
+  wa_dept-dept = 'HR & Admin'.
+  APPEND wa_dept TO it_dept.
+
+  wa_dept-dept = 'IT section'.
+  APPEND wa_dept TO it_dept.
+
+  wa_dept-dept = 'Real Estate and Assets'.
+  APPEND wa_dept TO it_dept.
+
+  wa_dept-dept = 'Operation'.
+  APPEND wa_dept TO it_dept.
+
+  wa_dept-dept = 'Blending'.
+  APPEND wa_dept TO it_dept.
+
+  wa_dept-dept = 'Store & Inventory'.
+  APPEND wa_dept TO it_dept.
+
+  wa_dept-dept = 'Supply  Chain'.
+  APPEND wa_dept TO it_dept.
+
+  wa_dept-dept = 'Costing'.
+  APPEND wa_dept TO it_dept.
+
+  wa_dept-dept = 'MCO Ctg.'.
+  APPEND wa_dept TO it_dept.
+
+  wa_dept-dept = 'Admin (DHK)'.
+  APPEND wa_dept TO it_dept.
+
+  wa_dept-dept = 'Credit control'.
+  APPEND wa_dept TO it_dept.
+
+  wa_dept-dept = 'Wahid Tube'.
+  APPEND wa_dept TO it_dept.
+
+  wa_dept-dept = 'QMR'.
+  APPEND wa_dept TO it_dept.
+
+  wa_dept-dept = 'Ware house (Dhaka)'.
+  APPEND wa_dept TO it_dept.
+
+  CALL FUNCTION 'F4IF_INT_TABLE_VALUE_REQUEST'
+    EXPORTING
+      retfield        = 'char15'
+      value_org       = 'S'
+    TABLES
+      value_tab       = it_dept
+      return_tab      = it_return
+    EXCEPTIONS
+      parameter_error = 1
+      no_values_found = 2
+      OTHERS          = 3.
+
+  READ TABLE it_return INDEX 1 INTO wa_return.
+  p_dept = wa_return-fieldval.
+
+  IF sy-subrc <> 0.
+* Implement suitable error handling here
+  ENDIF.
+
+AT SELECTION-SCREEN.
+
+  IF sscrfields-ucomm EQ space.
+    sscrfields-ucomm = 'ONLI'.
+  ENDIF.
+
+  SELECT * FROM zqm_r_ma_d_list INTO TABLE it_header WHERE dept = p_dept.
+  IF sy-subrc <> 0. "Exists
+    msg = p_dept.
+    CONCATENATE msg 'does not exist.' INTO msg SEPARATED BY ' '.
+    MESSAGE msg TYPE 'E'.
+  ELSE.
+    SELECT SINGLE * FROM zqm_r_ma_d_names INTO wa_header2 WHERE dept = p_dept.
+  ENDIF.
+
+  CALL SCREEN 100.
+*&---------------------------------------------------------------------*
+*& Module STATUS_0100 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE status_0100 OUTPUT.
+ SET PF-STATUS 'PF_MASTERD_SHOW'.
+ SET TITLEBAR 'TITLE_MASTERD_SHOW'.
+
+
+ CREATE OBJECT cust_container
+    EXPORTING
+      container_name              = 'HEADER'
+    EXCEPTIONS
+      cntl_error                  = 1
+      cntl_system_error           = 2
+      create_error                = 3
+      lifetime_error              = 4
+      lifetime_dynpro_dynpro_link = 5.
+
+ DATA : it_fcat TYPE lvc_t_fcat.
+  DATA : wa_fcat LIKE LINE OF it_fcat.
+  DATA: gs_layout TYPE lvc_s_layo.
+
+
+  gs_layout-sel_mode = 'D'.
+wa_fcat-col_pos = '1' .
+  wa_fcat-fieldname = 'SL_NO' .
+  wa_fcat-tabname = 'it_header' .
+  wa_fcat-coltext = 'Serial No'.
+  wa_fcat-seltext = 'Serial No' .
+  wa_fcat-key = 'X' .
+  wa_fcat-outputlen = 12.
+  APPEND wa_fcat TO it_fcat .
+  CLEAR wa_fcat .
+
+  wa_fcat-col_pos = '2' .
+  wa_fcat-fieldname = 'DOC' .
+  wa_fcat-tabname = 'it_header' .
+  wa_fcat-coltext = 'Document Title'.
+  wa_fcat-seltext = 'Document Title'.
+  wa_fcat-outputlen = 70.
+*  WA_FCAT-NO_OUT = 'X' .
+*  WA_FCAT-HOTSPOT = 'X' .
+  APPEND wa_fcat TO it_fcat .
+  CLEAR wa_fcat .
+
+  wa_fcat-col_pos = '3' .
+  wa_fcat-fieldname = 'DOC_NO'.
+  wa_fcat-tabname = 'it_header' .
+  wa_fcat-coltext = 'Document No.'.
+  wa_fcat-seltext = 'Document No.' .
+  wa_fcat-outputlen = 12.
+*  WA_FCAT-NO_OUT = 'X' .
+*  WA_FCAT-HOTSPOT = 'X' .
+  APPEND wa_fcat TO it_fcat .
+  CLEAR wa_fcat .
+
+  wa_fcat-col_pos = '4' .
+  wa_fcat-fieldname = 'REV' .
+  wa_fcat-tabname = 'it_header' .
+  wa_fcat-coltext = 'Rev. No.'.
+  wa_fcat-seltext = 'Rev. No.'.
+  wa_fcat-outputlen = 12.
+*  WA_FCAT-NO_OUT = 'X' .
+*  WA_FCAT-HOTSPOT = 'X' .
+  APPEND wa_fcat TO it_fcat .
+  CLEAR wa_fcat .
+
+  wa_fcat-col_pos = '5' .
+  wa_fcat-fieldname = 'REF' .
+  wa_fcat-tabname = 'it_header' .
+  wa_fcat-coltext = 'Ref. No.'.
+  wa_fcat-seltext = 'Ref. No.'.
+*  WA_FCAT-NO_OUT = 'X' .
+*  WA_FCAT-HOTSPOT = 'X' .
+  wa_fcat-outputlen = 15.
+  APPEND wa_fcat TO it_fcat .
+  CLEAR wa_fcat .
+
+
+  wa_fcat-col_pos = '6' .
+  wa_fcat-fieldname = 'EF_DATE' .
+  wa_fcat-tabname = 'it_header' .
+  wa_fcat-coltext = 'Effective Date'.
+  wa_fcat-seltext = 'Effective Date'.
+*  WA_FCAT-NO_OUT = 'X' .
+*  WA_FCAT-HOTSPOT = 'X' .
+  wa_fcat-outputlen = 12.
+  APPEND wa_fcat TO it_fcat .
+  CLEAR wa_fcat .
+
+
+
+    wa_fcat-col_pos = '7' .
+  wa_fcat-fieldname = 'CUSTODIAN' .
+  wa_fcat-tabname = 'it_header' .
+  wa_fcat-coltext = 'Custodian (Full Name)'.
+  wa_fcat-seltext = 'Custodian (Full Name)'.
+*  WA_FCAT-NO_OUT = 'X' .
+*  WA_FCAT-HOTSPOT = 'X' .
+  wa_fcat-outputlen = 18.
+  APPEND wa_fcat TO it_fcat .
+  CLEAR wa_fcat .
+
+  wa_fcat-col_pos = '8' .
+  wa_fcat-fieldname = 'REMARKS' .
+  wa_fcat-tabname = 'it_header' .
+  wa_fcat-coltext = 'Remarks'.
+  wa_fcat-seltext = 'Remarks'.
+*  WA_FCAT-NO_OUT = 'X' .
+*  WA_FCAT-HOTSPOT = 'X' .
+  wa_fcat-outputlen = 35.
+  APPEND wa_fcat TO it_fcat .
+  CLEAR wa_fcat .
+
+
+  gs_layout-grid_title = 'MASTER DOCUMENT LIST'.
+  CREATE OBJECT lv_grid
+    EXPORTING
+      i_parent          = cust_container
+    EXCEPTIONS
+      error_cntl_create = 1
+      error_cntl_init   = 2
+      error_cntl_link   = 3
+      error_dp_create   = 4
+      OTHERS            = 5.
+
+
+CALL METHOD lv_grid->set_table_for_first_display
+    EXPORTING
+      is_layout                     = gs_layout
+      i_save                        = 'A'
+    CHANGING
+      it_fieldcatalog               = it_fcat
+      it_outtab                     = it_header    " Output Table
+    EXCEPTIONS
+      invalid_parameter_combination = 1
+      program_error                 = 2
+      too_many_lines                = 3
+      OTHERS                        = 4.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0100  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0100 INPUT.
+
+  IF sy-ucomm = 'BACK' OR sy-ucomm = 'EXIT' OR sy-ucomm = 'CANCEL'.
+    LEAVE TO SCREEN 0.
+  ENDIF.
+
+ENDMODULE.

@@ -1,0 +1,66 @@
+PROCESS BEFORE OUTPUT.
+  MODULE status_0100.
+
+
+*&SPWIZARD: PBO FLOW LOGIC FOR TABLECONTROL 'REMARKS_CONTROL'
+  MODULE remarks_control_change_tc_attr.
+*&SPWIZARD: MODULE REMARKS_CONTROL_CHANGE_COL_ATTR.
+  LOOP AT   it_remarks
+       INTO wa_remarks
+       WITH CONTROL remarks_control
+       CURSOR remarks_control-current_line.
+    MODULE remarks_control_get_lines.
+*&SPWIZARD:   MODULE REMARKS_CONTROL_CHANGE_FIELD_ATTR
+  ENDLOOP.
+
+*&SPWIZARD: PBO FLOW LOGIC FOR TABLECONTROL 'TRAVEL_CONTROL'
+  MODULE travel_control_change_tc_attr.
+*&SPWIZARD: MODULE TRAVEL_CONTROL_CHANGE_COL_ATTR.
+  LOOP AT   it_travel
+       INTO wa_travel
+       WITH CONTROL travel_control
+       CURSOR travel_control-current_line.
+    MODULE travel_control_get_lines.
+*&SPWIZARD:   MODULE TRAVEL_CONTROL_CHANGE_FIELD_ATTR
+  ENDLOOP.
+
+
+
+
+PROCESS AFTER INPUT.
+
+*&SPWIZARD: PAI FLOW LOGIC FOR TABLECONTROL 'REMARKS_CONTROL'
+  LOOP AT it_remarks.
+    MODULE update.
+    CHAIN.
+      FIELD wa_remarks-remarks_date.
+      FIELD wa_remarks-remarks.
+      MODULE remarks_control_modify ON CHAIN-REQUEST.
+    ENDCHAIN.
+    FIELD wa_remarks-remarks_mark
+      MODULE remarks_control_mark ON REQUEST.
+  ENDLOOP.
+  MODULE remarks_control_user_command.
+*&SPWIZARD: MODULE REMARKS_CONTROL_CHANGE_TC_ATTR.
+*&SPWIZARD: MODULE REMARKS_CONTROL_CHANGE_COL_ATTR.
+
+
+*&SPWIZARD: PAI FLOW LOGIC FOR TABLECONTROL 'TRAVEL_CONTROL'
+  LOOP AT it_travel.
+    MODULE update_travel.
+    CHAIN.
+      FIELD wa_travel-travel_date.
+      FIELD wa_travel-travel_time.
+      FIELD wa_travel-travel_start.
+      FIELD wa_travel-travel_end.
+      MODULE travel_control_modify ON CHAIN-REQUEST.
+    ENDCHAIN.
+    FIELD wa_travel-mark
+      MODULE travel_control_mark ON REQUEST.
+  ENDLOOP.
+  MODULE travel_control_user_command.
+*&SPWIZARD: MODULE TRAVEL_CONTROL_CHANGE_TC_ATTR.
+*&SPWIZARD: MODULE TRAVEL_CONTROL_CHANGE_COL_ATTR.
+
+
+  MODULE user_command_0100.
